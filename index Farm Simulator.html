@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Farm Journal — FS25 Session Report</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700;900&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --soil: #1E1208;
+      --bark: #3A2010;
+      --wheat: #C8963E;
+      --wheat-light: #F0C97A;
+      --wheat-pale: #FDF6E3;
+      --leaf: #3B6D11;
+      --leaf-light: #639922;
+      --leaf-pale: #EAF3DE;
+      --cream: #FAF6EF;
+      --parchment: #F2EAD8;
+      --parchment-dark: #E8DCC8;
+      --ink: #1C130A;
+      --ink-muted: #5C4A35;
+      --ink-faint: #9C8A75;
+      --border: rgba(74,44,26,0.14);
+      --border-strong: rgba(74,44,26,0.28);
+      --red: #A32D2D;
+      --red-pale: #FCF0F0;
+      --green: #3B6D11;
+      --amber: #BA7517;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Lora', serif;
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 540px;
+      margin: 0 auto;
+      padding-bottom: 60px;
+    }
+
+    /* Header */
+    .header {
+      background: var(--soil);
+      padding: 30px 24px 26px;
+      text-align: center;
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0; height: 5px;
+      background: repeating-linear-gradient(90deg,
+        var(--wheat) 0px, var(--wheat) 10px,
+        var(--bark) 10px, var(--bark) 14px);
+    }
+    .header-icon { font-size: 44px; display: block; margin-bottom: 10px; }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 900;
+      color: var(--wheat-light);
+      letter-spacing: -0.4px; line-height: 1.1;
+    }
+    .header-sub {
+      font-size: 12px;
+      color: rgba(240,201,122,0.55);
+      margin-top: 6px; font-style: italic;
+    }
+    .session-badge {
+      display: inline-block;
+      margin-top: 12px;
+      background: rgba(240,201,122,0.12);
+      border: 1px solid rgba(240,201,122,0.25);
+      border-radius: 99px;
+      padding: 4px 16px;
+      font-size: 12px;
+      color: var(--wheat-light);
+      letter-spacing: 0.06em;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      background: var(--parchment);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .progress-label {
+      display: flex; justify-content: space-between;
+      font-size: 11px; color: var(--ink-faint);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .progress-track {
+      height: 4px; background: var(--border);
+      border-radius: 99px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--leaf-light);
+      border-radius: 99px; width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    /* Sections */
+    .section {
+      margin: 0 14px;
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-of-type { border-bottom: none; }
+    .section-header {
+      display: flex; align-items: center;
+      gap: 8px; margin-bottom: 14px;
+    }
+    .section-icon { font-size: 15px; }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.13em; color: var(--ink-muted);
+    }
+
+    /* Inputs */
+    .field-stack { display: flex; flex-direction: column; gap: 8px; }
+    .field-row { display: flex; align-items: flex-start; gap: 10px; }
+    .field-bullet {
+      width: 22px; height: 22px; margin-top: 9px;
+      background: var(--parchment-dark);
+      border: 1px solid var(--border-strong);
+      border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700;
+      color: var(--ink-faint);
+      font-family: 'Playfair Display', serif;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    input[type="number"],
+    textarea, select {
+      width: 100%;
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: 'Lora', serif;
+      font-size: 15px; color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      -webkit-appearance: none; appearance: none;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--wheat);
+      background: var(--wheat-pale);
+    }
+    input::placeholder, textarea::placeholder {
+      color: var(--ink-faint); font-style: italic; font-size: 14px;
+    }
+    textarea { resize: vertical; min-height: 96px; line-height: 1.7; }
+    .input-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .input-label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--ink-faint); margin-bottom: 4px;
+    }
+
+    /* Money */
+    .money-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .money-card {
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .money-card label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--ink-faint);
+      display: block; margin-bottom: 6px;
+    }
+    .money-input-wrap { display: flex; align-items: center; gap: 4px; }
+    .money-symbol {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; font-weight: 500; color: var(--ink-muted);
+    }
+    .money-input {
+      flex: 1; min-width: 0;
+      font-family: 'Playfair Display', serif;
+      font-size: 22px; font-weight: 700;
+      background: transparent; border: none; outline: none;
+      color: var(--ink); padding: 0;
+    }
+    .money-input::placeholder { color: var(--ink-faint); font-size: 18px; font-weight: 500; }
+
+    /* Profit */
+    .profit-card {
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px;
+    }
+    .profit-row {
+      display: flex; justify-content: space-between;
+      align-items: baseline; margin-bottom: 8px;
+    }
+    .profit-label { font-size: 11px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.07em; }
+    .profit-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 26px; font-weight: 700; transition: color 0.3s;
+    }
+    .profit-pct {
+      font-family: 'Playfair Display', serif;
+      font-size: 14px; font-weight: 500; margin-left: 8px; opacity: 0.75;
+    }
+    .profit-pos { color: var(--green); }
+    .profit-neg { color: var(--red); }
+    .profit-zero { color: var(--ink-faint); }
+    .bar-track { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; margin-bottom: 10px; }
+    .bar-fill { height: 100%; border-radius: 99px; width: 0%; transition: width 0.4s ease, background 0.3s; }
+    .bar-green { background: var(--leaf-light); }
+    .bar-red { background: var(--red); }
+    .insight-box {
+      padding: 10px 12px;
+      background: rgba(59,109,17,0.07);
+      border-left: 3px solid var(--leaf-light);
+      border-radius: 0 6px 6px 0;
+      font-size: 13px; color: var(--ink-muted);
+      font-style: italic; line-height: 1.55; min-height: 38px;
+    }
+
+    /* Time card */
+    .time-card {
+      background: var(--parchment);
+      border: 1px solid var(--border);
+      border-radius: 10px; padding: 14px 16px; margin-top: 10px;
+    }
+    .time-result { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+    .time-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px; font-weight: 700; color: var(--ink);
+    }
+    .time-unit { font-size: 14px; color: var(--ink-faint); }
+    .time-math { margin-top: 8px; font-size: 13px; color: var(--ink-muted); font-style: italic; line-height: 1.5; }
+
+    /* Goal check */
+    .goal-check-row { display: flex; gap: 7px; flex-wrap: wrap; }
+    .goal-btn {
+      flex: 1; min-width: 70px;
+      padding: 10px 6px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      background: var(--parchment);
+      font-family: 'Lora', serif;
+      font-size: 13px; color: var(--ink-muted);
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .goal-btn.sel-yes { background: var(--leaf-pale); border-color: var(--leaf-light); color: var(--green); font-weight: 500; }
+    .goal-btn.sel-partial { background: #FFF8E6; border-color: var(--amber); color: var(--amber); font-weight: 500; }
+    .goal-btn.sel-no { background: var(--red-pale); border-color: var(--red); color: var(--red); font-weight: 500; }
+    .goal-btn.sel-na { background: var(--parchment-dark); border-color: var(--border-strong); color: var(--ink-muted); font-weight: 500; }
+
+    /* Mood */
+    .mood-row { display: flex; align-items: center; gap: 12px; }
+    .mood-label { font-size: 13px; color: var(--ink-muted); min-width: 86px; }
+    .mood-emoji { font-size: 20px; min-width: 26px; text-align: center; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      flex: 1; height: 4px; background: var(--border);
+      border-radius: 99px; outline: none; border: none; padding: 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      background: var(--wheat); border-radius: 50%;
+      cursor: pointer; border: 2px solid var(--soil);
+    }
+
+    /* Stars */
+    .star-row { display: flex; gap: 8px; margin-top: 4px; }
+    .star {
+      font-size: 30px; cursor: pointer;
+      opacity: 0.2; transition: opacity 0.15s, transform 0.1s;
+      user-select: none; line-height: 1;
+    }
+    .star.lit { opacity: 1; }
+    .star:hover { transform: scale(1.2); }
+
+    /* Difficulty */
+    .diff-row { display: flex; gap: 6px; }
+    .diff-btn {
+      flex: 1; padding: 9px 4px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px; background: var(--parchment);
+      font-family: 'Lora', serif; font-size: 13px; color: var(--ink-muted);
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .diff-btn.selected { background: var(--soil); border-color: var(--soil); color: var(--wheat-light); }
+
+    .sep-label {
+      font-size: 11px; text-transform: uppercase;
+      letter-spacing: 0.09em; color: var(--ink-faint);
+      margin: 8px 0 5px;
+    }
+
+    /* Map selector with custom flag */
+    .map-option { display: flex; align-items: center; gap: 10px; }
+    .custom-map-wrap { display: none; margin-top: 6px; }
+    .custom-map-wrap.visible { display: block; }
+
+    /* Submit */
+    .submit-wrap { padding: 24px 14px 0; }
+    .submit-btn {
+      width: 100%; padding: 16px;
+      background: var(--soil); color: var(--wheat-light);
+      border: none; border-radius: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; letter-spacing: 0.3px;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .submit-btn:hover { background: var(--bark); }
+    .submit-btn:active { transform: scale(0.99); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(240,201,122,0.3);
+      border-top-color: var(--wheat-light);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle; margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success */
+    .success-panel {
+      display: none;
+      margin: 24px 14px 0;
+      background: var(--leaf-pale);
+      border: 1px solid rgba(59,109,17,0.25);
+      border-radius: 14px; padding: 28px 20px; text-align: center;
+    }
+    .success-panel.visible { display: block; }
+    .success-icon { font-size: 42px; display: block; margin-bottom: 10px; }
+    .success-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--green); margin-bottom: 8px;
+    }
+    .success-sub { font-size: 14px; color: var(--ink-muted); font-style: italic; line-height: 1.7; }
+
+    /* Error */
+    .error-msg {
+      display: none; margin: 12px 14px 0;
+      padding: 12px 14px; background: var(--red-pale);
+      border: 1px solid rgba(163,45,45,0.25);
+      border-radius: 8px; font-size: 13px; color: var(--red);
+    }
+    .error-msg.visible { display: block; }
+
+    .footer-note {
+      text-align: center; font-size: 12px; color: var(--ink-faint);
+      font-style: italic; margin: 20px 14px 0; line-height: 1.7;
+    }
+
+    @media (max-width: 380px) {
+      .money-input { font-size: 18px; }
+      .header h1 { font-size: 22px; }
+      .time-value { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <span class="header-icon">🚜</span>
+    <h1>Farm Session Journal</h1>
+    <p class="header-sub">Farming Simulator 25 — filed with the Regulatory Authority after every session</p>
+    <div class="session-badge">Session #<span id="session-num">—</span></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span>Report progress</span>
+      <span id="progress-pct">0%</span>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+  </div>
+
+  <form id="journal-form" action="https://formspree.io/f/xykbjoov" method="POST">
+
+    <!-- Hidden meta -->
+    <input type="hidden" name="_subject" id="email-subject">
+    <input type="hidden" name="session_number" id="session-num-hidden">
+
+    <!-- 1. Farm Identity -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🏡</span>
+        <span class="section-title">Farm Identity</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="input-label">Farm name</div>
+          <input type="text" name="farm_name" id="farm-name" placeholder="What did you name this farm?" required>
+        </div>
+        <div>
+          <div class="input-label">Map</div>
+          <select name="map_name" id="map-select" onchange="handleMapSelect()">
+            <option value="">Select map...</option>
+            <optgroup label="Base Game Maps">
+              <option value="Riverbend Springs">Riverbend Springs (North America)</option>
+              <option value="Hutan Pantai">Hutan Pantai (East Asia)</option>
+              <option value="Zielonka">Zielonka (Central Europe)</option>
+            </optgroup>
+            <optgroup label="Expansion Maps">
+              <option value="Kinlaig">Kinlaig — Highlands Fishing Expansion (Scotland)</option>
+              <option value="Silverrun Forest">Silverrun Forest (mod)</option>
+              <option value="HORSCH AgroVation">HORSCH AgroVation (mod)</option>
+            </optgroup>
+            <optgroup label="Other">
+              <option value="custom">Custom / Mod map (type it in)...</option>
+            </optgroup>
+          </select>
+          <div class="custom-map-wrap" id="custom-map-wrap">
+            <input type="text" name="map_custom" id="map-custom" placeholder="Type the map name">
+          </div>
+        </div>
+        <div>
+          <div class="input-label">Starting scenario</div>
+          <select name="scenario">
+            <option value="">Select starting mode...</option>
+            <option>New Farmer (easy — money and equipment provided)</option>
+            <option>Farm Manager (medium — some startup funds)</option>
+            <option>Starting from Scratch (hard — no money, no equipment)</option>
+            <option>Continuing an existing farm</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Session Info -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📅</span>
+        <span class="section-title">Session Info</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="input-label">Date</div>
+          <input type="date" name="date" id="session-date" required>
+        </div>
+        <div class="input-grid-2">
+          <div>
+            <div class="input-label">Start time</div>
+            <input type="time" name="start_time" id="start-time" oninput="calcTime()">
+          </div>
+          <div>
+            <div class="input-label">Finish time</div>
+            <input type="time" name="end_time" id="end-time" oninput="calcTime()">
+          </div>
+        </div>
+
+        <div class="time-card">
+          <div class="profit-label">Total play time</div>
+          <div class="time-result">
+            <span class="time-value" id="time-display">—</span>
+            <span class="time-unit" id="time-unit"></span>
+          </div>
+          <div class="time-math" id="time-math"></div>
+        </div>
+
+        <input type="hidden" name="total_hours_decimal" id="total-hours-hidden">
+        <input type="hidden" name="total_minutes" id="total-minutes-hidden">
+
+        <div>
+          <div class="input-label">Who did you play with?</div>
+          <input type="text" name="played_with" id="played-with" placeholder="Solo — or list names (e.g. Jake and Tyler)">
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Mood -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🌤</span>
+        <span class="section-title">How Were You Feeling?</span>
+      </div>
+      <div class="field-stack">
+        <div class="mood-row">
+          <span class="mood-label">Going in</span>
+          <input type="range" name="mood_before" id="mood-in" min="1" max="5" value="3" oninput="updateMoodEmoji('mood-in','emoji-in')">
+          <span class="mood-emoji" id="emoji-in">😐</span>
+        </div>
+        <div class="mood-row">
+          <span class="mood-label">Coming out</span>
+          <input type="range" name="mood_after" id="mood-out" min="1" max="5" value="3" oninput="updateMoodEmoji('mood-out','emoji-out')">
+          <span class="mood-emoji" id="emoji-out">😐</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Money -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">💰</span>
+        <span class="section-title">The Money</span>
+      </div>
+
+      <div class="money-grid">
+        <div class="money-card">
+          <label>Started with</label>
+          <div class="money-input-wrap">
+            <span class="money-symbol">$</span>
+            <input type="number" class="money-input" name="money_start" id="money-start" placeholder="0" min="0" oninput="updateFinancials()">
+          </div>
+        </div>
+        <div class="money-card">
+          <label>Finished with</label>
+          <div class="money-input-wrap">
+            <span class="money-symbol">$</span>
+            <input type="number" class="money-input" name="money_end" id="money-end" placeholder="0" min="0" oninput="updateFinancials()">
+          </div>
+        </div>
+      </div>
+
+      <div class="profit-card">
+        <div class="profit-row">
+          <span class="profit-label">Session profit / loss</span>
+          <span>
+            <span class="profit-value profit-zero" id="profit-display">—</span>
+            <span class="profit-pct" id="profit-pct-display"></span>
+          </span>
+        </div>
+        <div class="bar-track"><div class="bar-fill bar-green" id="profit-bar"></div></div>
+        <div class="insight-box" id="math-insight">Enter your start and end money to see your profit.</div>
+      </div>
+
+      <div style="margin-top:10px;" class="field-stack">
+        <div>
+          <div class="input-label">Biggest purchase this session</div>
+          <input type="text" name="biggest_purchase" placeholder="e.g. Fendt 724 tractor — $180,000 (or 'none')">
+        </div>
+        <div class="input-grid-2">
+          <div>
+            <div class="input-label">Loans taken out ($)</div>
+            <input type="number" name="loans_taken" placeholder="0" min="0">
+          </div>
+          <div>
+            <div class="input-label">Loans paid off ($)</div>
+            <input type="number" name="loans_paid" placeholder="0" min="0">
+          </div>
+        </div>
+        <div>
+          <div class="input-label">Total debt right now ($)</div>
+          <input type="number" name="total_debt" placeholder="0 if debt-free" min="0">
+        </div>
+      </div>
+
+      <input type="hidden" name="profit_loss_dollars" id="profit-hidden">
+      <input type="hidden" name="profit_loss_pct" id="profit-pct-hidden">
+    </div>
+
+    <!-- 5. What I Did -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">✅</span>
+        <span class="section-title">What I Did This Session</span>
+      </div>
+      <div class="field-stack">
+        <div class="field-row">
+          <div class="field-bullet">1</div>
+          <input type="text" name="task_1" placeholder="e.g. Harvested wheat on fields 3 and 4">
+        </div>
+        <div class="field-row">
+          <div class="field-bullet">2</div>
+          <input type="text" name="task_2" placeholder="e.g. Sold barley — waited for better price">
+        </div>
+        <div class="field-row">
+          <div class="field-bullet">3</div>
+          <input type="text" name="task_3" placeholder="e.g. Paid off half my equipment loan">
+        </div>
+        <div class="field-row">
+          <div class="field-bullet">4</div>
+          <input type="text" name="task_4" placeholder="e.g. Planted canola on field 6">
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Farm Status -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🌾</span>
+        <span class="section-title">Farm Status</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="input-label">Fields owned</div>
+          <input type="text" name="fields_owned" placeholder="e.g. 4 fields, about 18 hectares total">
+        </div>
+        <div>
+          <div class="input-label">Crops in the ground right now</div>
+          <input type="text" name="crops_growing" placeholder="e.g. Wheat (field 2), canola (field 5 — just planted)">
+        </div>
+        <div>
+          <div class="input-label">Equipment bought or sold this session</div>
+          <input type="text" name="equipment_changes" placeholder="e.g. Sold old seeder, bought Case IH Precision Hoe (or 'none')">
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Saving Goal -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🎯</span>
+        <span class="section-title">Saving For Something?</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="input-label">What are you saving for?</div>
+          <input type="text" name="saving_goal_name" placeholder="e.g. John Deere S790 combine harvester">
+        </div>
+        <div class="input-grid-2">
+          <div>
+            <div class="input-label">Goal cost ($)</div>
+            <input type="number" name="saving_goal_cost" id="saving-cost" placeholder="0" min="0" oninput="updateSavingGoal()">
+          </div>
+          <div>
+            <div class="input-label">Current savings ($)</div>
+            <input type="number" name="saving_current" id="saving-current" placeholder="0" min="0" oninput="updateSavingGoal()">
+          </div>
+        </div>
+        <div class="insight-box" id="saving-insight" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- 8. Last Session Goal Check -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🔄</span>
+        <span class="section-title">Last Session's Goal — Did You Hit It?</span>
+      </div>
+      <div class="field-stack">
+        <div class="goal-check-row">
+          <button type="button" class="goal-btn" onclick="selectGoal('yes',this)">✅ Yes</button>
+          <button type="button" class="goal-btn" onclick="selectGoal('partial',this)">〰️ Partially</button>
+          <button type="button" class="goal-btn" onclick="selectGoal('no',this)">❌ Not yet</button>
+          <button type="button" class="goal-btn" onclick="selectGoal('na',this)">— First session</button>
+        </div>
+        <input type="hidden" name="last_goal_result" id="goal-result-hidden">
+        <input type="text" name="last_goal_notes" placeholder="What happened? (optional)">
+      </div>
+    </div>
+
+    <!-- 9. Journal -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <span class="section-title">Journal — What Happened?</span>
+      </div>
+      <textarea name="journal" id="journal" placeholder="Tell the story of your session. What went well? Anything go wrong? Any tough calls? What surprised you?" required></textarea>
+    </div>
+
+    <!-- 10. Reflection -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">🧠</span>
+        <span class="section-title">Think About It</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="sep-label">One thing you learned or figured out</div>
+          <input type="text" name="lesson_learned" placeholder="e.g. Selling when demand is high gets 20% more money">
+        </div>
+        <div>
+          <div class="sep-label">One real-world connection</div>
+          <input type="text" name="real_world" placeholder="e.g. This is like how a real business manages cash flow">
+        </div>
+        <div>
+          <div class="sep-label">What would you do differently?</div>
+          <input type="text" name="do_differently" placeholder="e.g. Not spend all my money on equipment at once">
+        </div>
+        <div>
+          <div class="sep-label">Plan for your next session</div>
+          <textarea name="next_plan" placeholder="First thing you'll do when you load in next time?" style="min-height:70px;"></textarea>
+        </div>
+        <div>
+          <div class="sep-label">Current main goal</div>
+          <input type="text" name="current_goal" placeholder="e.g. Own 6 fields and be debt-free by session 10">
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. Rating -->
+    <div class="section">
+      <div class="section-header">
+        <span class="section-icon">⭐</span>
+        <span class="section-title">Rate This Session</span>
+      </div>
+      <div class="field-stack">
+        <div>
+          <div class="sep-label">Overall rating</div>
+          <div class="star-row" id="stars">
+            <span class="star" data-val="1">⭐</span>
+            <span class="star" data-val="2">⭐</span>
+            <span class="star" data-val="3">⭐</span>
+            <span class="star" data-val="4">⭐</span>
+            <span class="star" data-val="5">⭐</span>
+          </div>
+        </div>
+        <div>
+          <div class="sep-label">Session difficulty</div>
+          <div class="diff-row">
+            <button type="button" class="diff-btn" onclick="selectDiff('Easy',this)">Easy</button>
+            <button type="button" class="diff-btn" onclick="selectDiff('Medium',this)">Medium</button>
+            <button type="button" class="diff-btn" onclick="selectDiff('Hard',this)">Hard</button>
+            <button type="button" class="diff-btn" onclick="selectDiff('Brutal',this)">Brutal</button>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="rating_stars" id="rating-input" value="0">
+      <input type="hidden" name="difficulty" id="difficulty-input" value="">
+    </div>
+
+    <div class="submit-wrap">
+      <button type="submit" class="submit-btn" id="submit-btn">
+        Submit Report to Regulatory Authority 🌾
+      </button>
+    </div>
+
+  </form>
+
+  <div class="success-panel" id="success-panel">
+    <span class="success-icon">🌱</span>
+    <div class="success-title">Report filed successfully.</div>
+    <div class="success-sub">
+      The Regulatory Authority has received your session data.<br><br>
+      Every number you track, every goal you set, every session you log — it's all evidence you're building something real.
+    </div>
+  </div>
+
+  <div class="error-msg" id="error-msg">
+    Could not send the report. Check your connection and try again.
+  </div>
+
+  <div class="footer-note">
+    Session data is reviewed by the Regulatory Authority after each filing.<br>
+    All numbers, goals, and reflections are on the record.
+  </div>
+
+</div>
+
+<script>
+  // Session counter
+  let sessionNum = parseInt(localStorage.getItem('fs25_session_count') || '0') + 1;
+  document.getElementById('session-num').textContent = sessionNum;
+  document.getElementById('session-num-hidden').value = sessionNum;
+
+  // Default date
+  document.getElementById('session-date').value = new Date().toISOString().split('T')[0];
+
+  // Map selector — show custom input if needed
+  function handleMapSelect() {
+    const val = document.getElementById('map-select').value;
+    const wrap = document.getElementById('custom-map-wrap');
+    wrap.classList.toggle('visible', val === 'custom');
+    updateProgress();
+  }
+
+  // Stars
+  let rating = 0;
+  document.querySelectorAll('.star').forEach(star => {
+    star.addEventListener('click', () => {
+      rating = parseInt(star.dataset.val);
+      document.getElementById('rating-input').value = rating;
+      document.querySelectorAll('.star').forEach(s =>
+        s.classList.toggle('lit', parseInt(s.dataset.val) <= rating));
+      updateProgress();
+    });
+  });
+
+  // Difficulty
+  function selectDiff(val, el) {
+    document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('difficulty-input').value = val;
+    updateProgress();
+  }
+
+  // Goal result
+  function selectGoal(val, el) {
+    document.querySelectorAll('.goal-btn').forEach(b =>
+      b.classList.remove('sel-yes','sel-partial','sel-no','sel-na'));
+    el.classList.add('sel-' + val);
+    document.getElementById('goal-result-hidden').value = val;
+    updateProgress();
+  }
+
+  // Mood
+  const moodEmojis = ['','😞','😕','😐','🙂','😄'];
+  function updateMoodEmoji(sliderId, emojiId) {
+    document.getElementById(emojiId).textContent =
+      moodEmojis[parseInt(document.getElementById(sliderId).value)];
+  }
+  updateMoodEmoji('mood-in','emoji-in');
+  updateMoodEmoji('mood-out','emoji-out');
+
+  // Time calc
+  function fmt12(h, m) {
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12 = h % 12 === 0 ? 12 : h % 12;
+    return h12 + ':' + String(m).padStart(2,'0') + ' ' + ampm;
+  }
+
+  function calcTime() {
+    const start = document.getElementById('start-time').value;
+    const end = document.getElementById('end-time').value;
+    const display = document.getElementById('time-display');
+    const unit = document.getElementById('time-unit');
+    const math = document.getElementById('time-math');
+
+    if (!start || !end) {
+      display.textContent = '—'; unit.textContent = ''; math.textContent = '';
+      document.getElementById('total-hours-hidden').value = '';
+      document.getElementById('total-minutes-hidden').value = '';
+      return;
+    }
+
+    const [sh, sm] = start.split(':').map(Number);
+    const [eh, em] = end.split(':').map(Number);
+    let totalMins = (eh * 60 + em) - (sh * 60 + sm);
+    if (totalMins < 0) totalMins += 1440;
+
+    const hrs = Math.floor(totalMins / 60);
+    const mins = totalMins % 60;
+    const decimal = (totalMins / 60).toFixed(2);
+
+    document.getElementById('total-hours-hidden').value = decimal;
+    document.getElementById('total-minutes-hidden').value = totalMins;
+
+    if (hrs > 0) {
+      display.textContent = hrs + 'h ' + (mins > 0 ? mins + 'm' : '');
+      unit.textContent = '';
+    } else {
+      display.textContent = mins;
+      unit.textContent = 'minutes';
+    }
+
+    const hrsLabel = hrs + ' hour' + (hrs !== 1 ? 's' : '');
+    const minsLabel = mins > 0 ? ' and ' + mins + ' minute' + (mins !== 1 ? 's' : '') : '';
+    math.textContent =
+      fmt12(sh,sm) + ' to ' + fmt12(eh,em) + ' = ' +
+      (hrs > 0 ? hrsLabel + minsLabel : mins + ' minutes') +
+      ' — that\'s ' + decimal + ' decimal hours. ' +
+      (parseFloat(decimal) >= 2 ? 'A solid block of farming time.' :
+       parseFloat(decimal) >= 1 ? 'A focused session.' : 'Quick session today.');
+
+    updateProgress();
+  }
+
+  // Financials
+  function fmtD(n) { return '$' + Math.abs(Math.round(n)).toLocaleString(); }
+
+  function updateFinancials() {
+    const start = parseFloat(document.getElementById('money-start').value) || 0;
+    const end = parseFloat(document.getElementById('money-end').value) || 0;
+    const hasStart = document.getElementById('money-start').value !== '';
+    const hasEnd = document.getElementById('money-end').value !== '';
+    const profit = end - start;
+    const display = document.getElementById('profit-display');
+    const pctDisp = document.getElementById('profit-pct-display');
+    const bar = document.getElementById('profit-bar');
+    const insight = document.getElementById('math-insight');
+
+    if (!hasStart || !hasEnd) {
+      display.textContent = '—';
+      display.className = 'profit-value profit-zero';
+      pctDisp.textContent = '';
+      bar.style.width = '0%';
+      insight.textContent = 'Enter your start and end money to see your profit.';
+      document.getElementById('profit-hidden').value = '';
+      document.getElementById('profit-pct-hidden').value = '';
+      return;
+    }
+
+    const pct = start > 0 ? (profit / start) * 100 : 0;
+    const pctStr = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
+    document.getElementById('profit-hidden').value = profit;
+    document.getElementById('profit-pct-hidden').value = pctStr;
+    pctDisp.textContent = pctStr;
+
+    if (profit > 0) {
+      display.textContent = '+' + fmtD(profit);
+      display.className = 'profit-value profit-pos';
+      pctDisp.style.color = 'var(--green)';
+      bar.className = 'bar-fill bar-green';
+      bar.style.width = Math.min(100, (profit / Math.max(start,10000))*100) + '%';
+      if (pct >= 25) insight.textContent = `You grew your money by ${pctStr}. Real investors aim for 7–10% per year — you just did that in one session.`;
+      else if (pct >= 10) insight.textContent = `Up ${pctStr}. You made ${fmtD(profit)} on a ${fmtD(start)} balance. Every dollar reinvested in land or equipment is a dollar working for you.`;
+      else if (pct >= 1) insight.textContent = `Small gain of ${pctStr}. Consistent small gains compound into big results — that's how real farms grow.`;
+      else insight.textContent = `Tiny gain. What crops or contracts might get you better margins next session?`;
+    } else if (profit < 0) {
+      display.textContent = '-' + fmtD(profit);
+      display.className = 'profit-value profit-neg';
+      pctDisp.style.color = 'var(--red)';
+      bar.className = 'bar-fill bar-red';
+      bar.style.width = Math.min(100, (Math.abs(profit)/Math.max(start,10000))*100) + '%';
+      insight.textContent = `Down ${pctStr}. Was this a planned investment (equipment, land) or a real loss? Spending to grow is different from losing money — which was it?`;
+    } else {
+      display.textContent = 'Break even';
+      display.className = 'profit-value profit-zero';
+      pctDisp.textContent = '';
+      bar.style.width = '50%';
+      insight.textContent = `Exactly break even. You protected your position. In business, sometimes not losing is winning.`;
+    }
+    updateProgress();
+  }
+
+  // Saving goal
+  function updateSavingGoal() {
+    const cost = parseFloat(document.getElementById('saving-cost').value) || 0;
+    const curr = parseFloat(document.getElementById('saving-current').value) || 0;
+    const box = document.getElementById('saving-insight');
+    if (!cost || !curr) { box.style.display = 'none'; return; }
+    const remaining = cost - curr;
+    const pct = Math.min(100,(curr/cost)*100).toFixed(1);
+    box.style.display = 'block';
+    if (remaining <= 0) {
+      box.textContent = `You've reached your goal — you can afford it! Time to buy, or set a bigger target.`;
+    } else {
+      box.textContent = `You're ${pct}% of the way there. You still need ${fmtD(remaining)} more. How many sessions until you can buy it?`;
+    }
+  }
+
+  // Progress bar
+  const tracked = ['farm-name','session-date','start-time','end-time','played-with','money-start','money-end','journal'];
+  const TOTAL = tracked.length + 2;
+
+  function updateProgress() {
+    let filled = tracked.filter(id => {
+      const el = document.getElementById(id);
+      return el && el.value && el.value.trim();
+    }).length;
+    if (rating > 0) filled++;
+    if (document.getElementById('goal-result-hidden').value) filled++;
+    const pct = Math.round((filled / TOTAL) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+  }
+
+  tracked.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateProgress);
+  });
+
+  // Form submit via Formspree (AJAX to stay on page)
+  document.getElementById('journal-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    if (!document.getElementById('journal').value.trim()) {
+      alert('Write something in the journal — even just a couple sentences!');
+      return;
+    }
+
+    // Build email subject
+    const farm = document.getElementById('farm-name').value || 'Unknown Farm';
+    const date = document.getElementById('session-date').value || 'Unknown Date';
+    document.getElementById('email-subject').value =
+      `FS25 Farm Journal — ${farm} — Session ${sessionNum} — ${date}`;
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Filing report...';
+    document.getElementById('error-msg').classList.remove('visible');
+
+    try {
+      const res = await fetch('https://formspree.io/f/xykbjoov', {
+        method: 'POST',
+        body: new FormData(this),
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        localStorage.setItem('fs25_session_count', sessionNum);
+        this.style.display = 'none';
+        document.getElementById('success-panel').classList.add('visible');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        throw new Error('Server error');
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = 'Submit Report to Regulatory Authority 🌾';
+      document.getElementById('error-msg').classList.add('visible');
+    }
+  });
+</script>
+</body>
+</html>
